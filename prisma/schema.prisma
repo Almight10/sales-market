@@ -1,0 +1,28 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Skema untuk Manajemen Pengguna
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  role      String   @default("Staff")
+  status    String   @default("Aktif")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Skema untuk Pesanan
+model Order {
+  id          String   @id @default(uuid())
+  orderNumber String   @unique
+  totalAmount Float
+  status      String   @default("Diproses")
+  createdAt   DateTime @default(now())
+}
