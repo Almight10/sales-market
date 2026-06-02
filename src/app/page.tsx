@@ -4,15 +4,17 @@ import React, { useState, useEffect } from 'react';
 import { 
   BarChart3, Users, ShoppingCart, FileText, Settings, 
   Menu, Bell, Search, Activity, CreditCard, DollarSign, 
-  Package2, MoreHorizontal, Plus, X, User as UserIcon, Calendar, Info
+  Package2, MoreHorizontal, Plus, X, User as UserIcon, Calendar, Info,
+  Lock, Mail, ArrowRight, Eye, EyeOff, LogOut, Truck, Warehouse, Boxes, Briefcase
 } from 'lucide-react';
 
-import { getUsers, createUser, getOrders, createOrder } from './actions';
+import { getUsers, createUser, getOrders, createOrder, loginUser, getSCMData, createSupplier, createInventory } from './actions';
 
 const navigations = [
   { id: 'dashboard', label: 'Dasbor Utama', icon: BarChart3 },
   { id: 'users', label: 'Manajemen Pengguna', icon: Users },
   { id: 'orders', label: 'Pesanan & Transaksi', icon: ShoppingCart },
+  { id: 'scm', label: 'Rantai Pasok (SCM)', icon: Truck },
   { id: 'reports', label: 'Analisis Laporan', icon: FileText },
   { id: 'settings', label: 'Pengaturan Sistem', icon: Settings },
 ];
@@ -20,15 +22,27 @@ const navigations = [
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  
+  // Auth State
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [loginLoading, setLoginLoading] = useState(false);
 
   // States dari Database
   const [users, setUsers] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
+  const [suppliers, setSuppliers] = useState<any[]>([]);
+  const [inventories, setInventories] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   
   // Modal States (Tambah Data)
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+  const [isSupplierModalOpen, setIsSupplierModalOpen] = useState(false);
+  const [isInventoryModalOpen, setIsInventoryModalOpen] = useState(false);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
   
   // Modal States (Lihat Detail)
   const [viewingUser, setViewingUser] = useState<any | null>(null);
@@ -37,18 +51,36 @@ export default function DashboardPage() {
   // Form States
   const [newUser, setNewUser] = useState({ name: '', email: '', role: 'Staff' });
   const [newOrder, setNewOrder] = useState({ amount: '' });
+  const [newSupplier, setNewSupplier] = useState({ name: '', contact: '' });
+  const [newInventory, setNewInventory] = useState({ itemName: '', stock: '', supplierId: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    fetchData();
-  }, [activeTab]);
+    // Check auth status
+    const authStatus = sessionStorage.getItem('nexus_auth');
+    if (authStatus === 'true') {
+      setIsLoggedIn(true);
+    } else {
+      setIsLoggedIn(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      fetchData();
+    }
+  }, [activeTab, isLoggedIn]);
 
   const fetchData = async () => {
     setIsLoading(true);
     const dbUsers = await getUsers();
     const dbOrders = await getOrders();
+    const scmData = await getSCMData();
+    
     setUsers(dbUsers);
     setOrders(dbOrders);
+    setSuppliers(scmData.suppliers);
+    setInventories(scmData.inventory);
     setIsLoading(false);
   };
 
@@ -75,6 +107,34 @@ export default function DashboardPage() {
       setIsOrderModalOpen(false);
       setNewOrder({ amount: '' }); 
       fetchData(); 
+    } else {
+      alert(res.message);
+    }
+    setIsSubmitting(false);
+  };
+
+  const submitSupplier = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    const res = await createSupplier(newSupplier.name, newSupplier.contact);
+    if (res.success) {
+      setIsSupplierModalOpen(false);
+      setNewSupplier({ name: '', contact: '' });
+      fetchData();
+    } else {
+      alert(res.message);
+    }
+    setIsSubmitting(false);
+  };
+
+  const submitInventory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    const res = await createInventory(newInventory.itemName, Number(newInventory.stock), newInventory.supplierId);
+    if (res.success) {
+      setIsInventoryModalOpen(false);
+      setNewInventory({ itemName: '', stock: '', supplierId: '' });
+      fetchData();
     } else {
       alert(res.message);
     }
@@ -245,6 +305,96 @@ export default function DashboardPage() {
     </div>
   );
 
+  // FEATURE: SCM (Rantai Pasok)
+  const renderSCM = () => (
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex items-center justify-between">
+         <h2 className="text-3xl font-bold tracking-tight">Manajemen Rantai Pasok (SCM)</h2>
+         <div className="flex gap-2">
+           <button onClick={() => setIsSupplierModalOpen(true)} className="bg-[hsl(var(--muted))] text-[hsl(var(--foreground))] px-4 py-2 rounded-lg hover:opacity-90 transition-opacity flex items-center gap-2 shadow-sm border border-[hsl(var(--border))]">
+            <Truck className="w-4 h-4" /> Tambah Pemasok
+          </button>
+           <button onClick={() => setIsInventoryModalOpen(true)} className="bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] px-4 py-2 rounded-lg hover:opacity-90 transition-opacity flex items-center gap-2 shadow-lg shadow-blue-500/30">
+            <Boxes className="w-4 h-4" /> Masukkan Barang
+          </button>
+         </div>
+      </div>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Suppliers List */}
+        <div className="glass rounded-xl p-6 shadow-sm border border-[hsl(var(--border))] flex flex-col h-full">
+           <div className="flex items-center gap-3 mb-6 pb-4 border-b border-[hsl(var(--border))]">
+              <div className="p-2 bg-[hsl(var(--primary))/10] rounded-xl text-[hsl(var(--primary))]">
+                 <Briefcase className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-bold text-xl">Daftar Pemasok Utama</h3>
+                <p className="text-sm text-[hsl(var(--muted-foreground))]">Kelola mitra dan supplier bisnis.</p>
+              </div>
+           </div>
+           
+           <div className="space-y-4 flex-1">
+             {isLoading ? <p>Memuat pemasok...</p> : suppliers.length === 0 ? (
+               <div className="py-8 text-center text-[hsl(var(--muted-foreground))] border-dashed border-2 rounded-xl border-[hsl(var(--border))]">
+                 Belum ada data pemasok
+               </div>
+             ) : (
+               suppliers.map((s) => (
+                 <div key={s.id} className="flex justify-between items-center p-4 border border-[hsl(var(--border))] rounded-xl hover:bg-[hsl(var(--muted))/50] transition-colors">
+                   <div>
+                     <p className="font-bold">{s.name}</p>
+                     <p className="text-sm text-[hsl(var(--muted-foreground))] flex items-center gap-1 mt-1"><Mail className="w-3 h-3"/> {s.contact}</p>
+                   </div>
+                   <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold dark:bg-emerald-900/30 dark:text-emerald-400 uppercase border border-emerald-200 dark:border-emerald-800/30">
+                     Aktif
+                   </span>
+                 </div>
+               ))
+             )}
+           </div>
+        </div>
+
+        {/* Inventory List */}
+        <div className="glass rounded-xl p-6 shadow-sm border border-[hsl(var(--border))] flex flex-col h-full">
+           <div className="flex items-center gap-3 mb-6 pb-4 border-b border-[hsl(var(--border))]">
+              <div className="p-2 bg-[hsl(var(--foreground))] text-[hsl(var(--background))] rounded-xl">
+                 <Warehouse className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-bold text-xl">Gudang Inventaris</h3>
+                <p className="text-sm text-[hsl(var(--muted-foreground))]">Pantau stok bahan dan barang gudang secara real-time.</p>
+              </div>
+           </div>
+           
+           <div className="space-y-4 flex-1">
+             {isLoading ? <p>Memuat inventaris...</p> : inventories.length === 0 ? (
+               <div className="py-8 text-center text-[hsl(var(--muted-foreground))] border-dashed border-2 rounded-xl border-[hsl(var(--border))]">
+                 Gudang inventaris masih kosong
+               </div>
+             ) : (
+               inventories.map((inv) => (
+                 <div key={inv.id} className="flex justify-between items-center p-4 border border-[hsl(var(--border))] rounded-xl hover:bg-[hsl(var(--muted))/50] transition-colors">
+                   <div className="flex gap-4 items-center">
+                     <div className="w-10 h-10 bg-[hsl(var(--muted))] rounded-lg flex items-center justify-center text-[hsl(var(--primary))] font-bold shadow-inner">
+                       {inv.stock}
+                     </div>
+                     <div>
+                       <p className="font-bold text-[hsl(var(--foreground))]">{inv.itemName}</p>
+                       <p className="text-xs text-[hsl(var(--muted-foreground))] font-semibold mt-1">Pemasok: {inv.supplier?.name || "Tidak Diketahui"}</p>
+                     </div>
+                   </div>
+                   <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase border ${inv.stock > 10 ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 border-blue-200' : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 border-orange-200'}`}>
+                     {inv.status}
+                   </span>
+                 </div>
+               ))
+             )}
+           </div>
+        </div>
+      </div>
+    </div>
+  );
+
   // FEATURE 4: Reports
   const renderReports = () => (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -305,8 +455,138 @@ export default function DashboardPage() {
     </div>
   );
 
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginLoading(true);
+    
+    try {
+      const result = await loginUser(loginEmail, loginPassword);
+      if (result.success) {
+        localStorage.setItem('nexus_auth', 'true');
+        setIsLoggedIn(true);
+      } else {
+        alert(result.message || "Gagal masuk");
+      }
+    } catch (error) {
+      alert("Terjadi kesalahan sistem saat mencoba masuk.");
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('nexus_auth');
+    setIsLoggedIn(false);
+  };
+
+  // FEATURE: Login Screen
+  const renderLogin = () => (
+    <div className="min-h-screen w-full flex items-center justify-center bg-[#f8fafc] p-4 relative overflow-hidden font-sans">
+      {/* Dynamic Background */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+        <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] bg-blue-500/20 rounded-full blur-[120px] animate-pulse"></div>
+        <div className="absolute bottom-[0%] right-[0%] w-[60%] h-[60%] bg-indigo-500/20 rounded-full blur-[150px] animate-pulse" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute top-[30%] -right-[10%] w-[40%] h-[40%] bg-cyan-500/10 rounded-full blur-[100px]"></div>
+      </div>
+
+      <div className="w-full max-w-md relative z-10">
+        <div className="text-center mb-10 animate-in fade-in slide-in-from-bottom-5 duration-700">
+          <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 mb-6 shadow-2xl shadow-blue-500/30">
+            <Activity className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-4xl font-black tracking-tight text-[hsl(var(--foreground))] mb-3">Selamat Datang</h1>
+          <p className="text-[hsl(var(--muted-foreground))] text-lg">Masuk ke sistem ERP Nexus</p>
+        </div>
+
+        <div className="glass rounded-3xl p-8 shadow-2xl border border-[hsl(var(--border))] animate-in fade-in zoom-in-95 duration-500 delay-150 fill-mode-both relative overflow-hidden">
+          {/* Shimmer effect line */}
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-50"></div>
+          
+          <form onSubmit={handleLoginSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-[hsl(var(--foreground))] ml-1">Alamat Email</label>
+              <div className="relative group">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[hsl(var(--muted-foreground))] group-focus-within:text-[hsl(var(--primary))] transition-colors" />
+                <input 
+                  type="email" 
+                  required
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
+                  placeholder="admin@ciptainovasi.id"
+                  className="w-full pl-12 pr-4 py-4 bg-[hsl(var(--background))]/50 border border-[hsl(var(--border))] rounded-2xl focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))]/50 transition-all font-medium"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-[hsl(var(--foreground))] ml-1">Kata Sandi</label>
+              <div className="relative group">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[hsl(var(--muted-foreground))] group-focus-within:text-[hsl(var(--primary))] transition-colors" />
+                <input 
+                  type={showPassword ? "text" : "password"} 
+                  required
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full pl-12 pr-12 py-4 bg-[hsl(var(--background))]/50 border border-[hsl(var(--border))] rounded-2xl focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))]/50 transition-all font-medium"
+                />
+                <button 
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] transition-colors focus:outline-none"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between mt-2 mb-6">
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <input type="checkbox" className="w-4 h-4 rounded border-[hsl(var(--border))] text-[hsl(var(--primary))] focus:ring-[hsl(var(--primary))]/50 bg-transparent transition-colors cursor-pointer" />
+                <span className="text-sm text-[hsl(var(--muted-foreground))] group-hover:text-[hsl(var(--foreground))] transition-colors">Ingat saya</span>
+              </label>
+              <a href="#" className="text-sm font-bold text-[hsl(var(--primary))] hover:underline">Lupa Sandi?</a>
+            </div>
+
+            <button 
+              type="submit" 
+              disabled={loginLoading}
+              className="w-full bg-[hsl(var(--foreground))] text-[hsl(var(--background))] py-4 rounded-2xl font-bold text-lg hover:bg-[hsl(var(--primary))] hover:text-white transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-xl flex items-center justify-center gap-2 disabled:opacity-70 disabled:pointer-events-none group"
+            >
+              {loginLoading ? (
+                <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
+              ) : (
+                <>
+                  Masuk Sistem <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </>
+              )}
+            </button>
+          </form>
+          
+          <div className="mt-8 text-center border-t border-[hsl(var(--border))]/50 pt-6">
+            <p className="text-sm text-[hsl(var(--muted-foreground))]">
+              Belum memiliki akses? <a href="#" className="font-bold text-[hsl(var(--foreground))] hover:text-[hsl(var(--primary))] transition-colors">Hubungi Administrator</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (isLoggedIn === null) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-[#f8fafc]">
+        <div className="w-10 h-10 border-4 border-[hsl(var(--primary))]/30 border-t-[hsl(var(--primary))] rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (isLoggedIn === false) {
+    return renderLogin();
+  }
+
   return (
-    <div className="flex h-screen bg-[#f8fafc] dark:bg-[#020817] overflow-hidden font-sans relative">
+    <div className="flex h-screen bg-[#f8fafc] overflow-hidden font-sans relative">
       
       {/* MODALS TAMBAH DATA (sudah ada) */}
       {isUserModalOpen && (
@@ -371,6 +651,78 @@ export default function DashboardPage() {
               <button type="button" onClick={() => setIsOrderModalOpen(false)} className="flex-1 py-3 px-4 rounded-xl font-bold border border-[hsl(var(--border))] hover:bg-[hsl(var(--muted))] transition-colors">Batal</button>
               <button disabled={isSubmitting} type="submit" className="flex-1 py-3 px-4 rounded-xl font-bold bg-[hsl(var(--foreground))] text-[hsl(var(--background))] hover:opacity-90 transition-opacity disabled:opacity-50">
                 {isSubmitting ? "Menyimpan..." : "Buat Order"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* MODALS SCM */}
+      {isSupplierModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+           <form onSubmit={submitSupplier} className="glass w-full max-w-md rounded-2xl p-6 shadow-2xl animate-in zoom-in-95 duration-200 bg-[hsl(var(--background))]">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold">Pemasok Baru</h3>
+              <button type="button" onClick={() => setIsSupplierModalOpen(false)} className="p-2 hover:bg-[hsl(var(--muted))] rounded-full transition-colors text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="space-y-4 mb-8">
+              <div>
+                <label className="block text-sm font-semibold mb-2">Nama Perusahaan / Pemasok</label>
+                <input required type="text" value={newSupplier.name} onChange={e=>setNewSupplier({...newSupplier, name: e.target.value})} className="w-full bg-transparent border border-[hsl(var(--input))] rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))] transition-shadow" placeholder="Cth: PT Sumber Makmur" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-2">Kontak Email / Telepon</label>
+                <input required type="text" value={newSupplier.contact} onChange={e=>setNewSupplier({...newSupplier, contact: e.target.value})} className="w-full bg-transparent border border-[hsl(var(--input))] rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))] transition-shadow" placeholder="Cth: admin@sumber.com" />
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <button type="button" onClick={() => setIsSupplierModalOpen(false)} className="flex-1 py-3 px-4 rounded-xl font-bold border border-[hsl(var(--border))] hover:bg-[hsl(var(--muted))] transition-colors">Batal</button>
+              <button disabled={isSubmitting} type="submit" className="flex-1 py-3 px-4 rounded-xl font-bold bg-[hsl(var(--primary))] text-white hover:opacity-90 transition-opacity disabled:opacity-50">
+                {isSubmitting ? "Menyimpan..." : "Simpan Data"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {isInventoryModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <form onSubmit={submitInventory} className="glass w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-in zoom-in-95 duration-200 bg-[hsl(var(--background))]">
+             <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold">Barang Baru (Inventaris)</h3>
+              <button type="button" onClick={() => setIsInventoryModalOpen(false)} className="p-2 hover:bg-[hsl(var(--muted))] rounded-full transition-colors text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-4 mb-8">
+              <div>
+                <label className="block text-sm font-semibold mb-2">Nama Barang</label>
+                <input required type="text" value={newInventory.itemName} onChange={e=>setNewInventory({...newInventory, itemName: e.target.value})} className="w-full bg-transparent border border-[hsl(var(--input))] rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))] transition-shadow font-medium" placeholder="Cth: Kertas HVS A4" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                 <div className="col-span-2">
+                   <label className="block text-sm font-semibold mb-2">Pilih Pemasok (Opsional)</label>
+                   <select value={newInventory.supplierId} onChange={e=>setNewInventory({...newInventory, supplierId: e.target.value})} className="w-full bg-transparent border border-[hsl(var(--input))] rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))] transition-shadow appearance-none cursor-pointer">
+                     <option value="" className="bg-[hsl(var(--background))]">-- Tanpa Pemasok --</option>
+                     {suppliers.map(s => (
+                        <option key={s.id} value={s.id} className="bg-[hsl(var(--background))]">{s.name}</option>
+                     ))}
+                   </select>
+                 </div>
+                 <div className="col-span-2">
+                   <label className="block text-sm font-semibold mb-2">Jumlah Stok</label>
+                   <input required type="number" min="0" value={newInventory.stock} onChange={e=>setNewInventory({...newInventory, stock: e.target.value})} className="w-full bg-transparent border border-[hsl(var(--input))] rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))] transition-shadow font-medium" placeholder="0" />
+                 </div>
+              </div>
+            </div>
+            <div className="flex gap-4">
+              <button type="button" onClick={() => setIsInventoryModalOpen(false)} className="flex-1 py-3 px-4 rounded-xl font-bold border border-[hsl(var(--border))] hover:bg-[hsl(var(--muted))] transition-colors">Batal</button>
+              <button disabled={isSubmitting} type="submit" className="flex-1 py-3 px-4 rounded-xl font-bold bg-[hsl(var(--foreground))] text-[hsl(var(--background))] hover:opacity-90 transition-opacity disabled:opacity-50">
+                {isSubmitting ? "Menyimpan..." : "Tambah Stok"}
               </button>
             </div>
           </form>
@@ -550,10 +902,60 @@ export default function DashboardPage() {
              </div>
           </div>
 
-          <div className="flex items-center gap-6">
-            <button onClick={() => alert("Menampilkan Log Server...")} className="relative p-2 rounded-full hover:bg-[hsl(var(--muted))] transition-colors group">
-              <Bell className="w-5 h-5 text-[hsl(var(--muted-foreground))] group-hover:text-[hsl(var(--foreground))] transition-colors" />
-              <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full animate-bounce border-2 border-[hsl(var(--card))]"></span>
+          <div className="flex items-center gap-6 relative">
+            <div className="relative">
+              <button onClick={() => setIsNotifOpen(!isNotifOpen)} className="relative p-2 rounded-full hover:bg-[hsl(var(--muted))] transition-colors group">
+                <Bell className="w-5 h-5 text-[hsl(var(--muted-foreground))] group-hover:text-[hsl(var(--foreground))] transition-colors" />
+                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full animate-bounce border-2 border-[hsl(var(--card))]"></span>
+              </button>
+
+              {/* NOTIFICATION DROPDOWN */}
+              {isNotifOpen && (
+                <div className="absolute right-0 mt-2 w-80 glass rounded-2xl shadow-2xl animate-in zoom-in-95 duration-200 bg-[hsl(var(--background))] border border-[hsl(var(--border))] overflow-hidden z-50">
+                  <div className="p-4 border-b border-[hsl(var(--border))] flex justify-between items-center bg-[hsl(var(--muted))]/30">
+                    <h3 className="font-bold text-sm">Notifikasi Server</h3>
+                    <span className="text-[10px] font-bold px-2 py-0.5 bg-red-100 text-red-600 rounded-full">2 Baru</span>
+                  </div>
+                  <div className="max-h-[300px] overflow-y-auto">
+                    <div className="p-4 border-b border-[hsl(var(--border))] hover:bg-[hsl(var(--muted))]/50 transition-colors cursor-pointer flex gap-3">
+                      <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                        <Users className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold">Pengguna Baru Mendaftar</p>
+                        <p className="text-xs text-[hsl(var(--muted-foreground))] mt-0.5 line-clamp-2">Seseorang baru saja ditambahkan ke sistem.</p>
+                        <p className="text-[10px] text-[hsl(var(--muted-foreground))] mt-1 font-medium">Baru saja</p>
+                      </div>
+                    </div>
+                    <div className="p-4 border-b border-[hsl(var(--border))] hover:bg-[hsl(var(--muted))]/50 transition-colors cursor-pointer flex gap-3 bg-[hsl(var(--primary))]/5">
+                      <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
+                        <ShoppingCart className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold">Pesanan Tertunda</p>
+                        <p className="text-xs text-[hsl(var(--muted-foreground))] mt-0.5 line-clamp-2">Ada pesanan terbaru di database yang perlu diproses.</p>
+                        <p className="text-[10px] text-[hsl(var(--muted-foreground))] mt-1 font-medium">2 jam yang lalu</p>
+                      </div>
+                    </div>
+                    <div className="p-4 hover:bg-[hsl(var(--muted))]/50 transition-colors cursor-pointer flex gap-3">
+                      <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                        <Activity className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold">Sistem Stabil</p>
+                        <p className="text-xs text-[hsl(var(--muted-foreground))] mt-0.5 line-clamp-2">Semua kluster load-balancer beroperasi 100%.</p>
+                        <p className="text-[10px] text-[hsl(var(--muted-foreground))] mt-1 font-medium">1 hari yang lalu</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-2 border-t border-[hsl(var(--border))] text-center bg-[hsl(var(--muted))]/20">
+                    <button className="text-xs font-bold text-[hsl(var(--primary))] hover:underline">Tandai semua dibaca</button>
+                  </div>
+                </div>
+              )}
+            </div>
+            <button onClick={handleLogout} className="relative p-2 rounded-full hover:bg-red-500/10 text-[hsl(var(--muted-foreground))] hover:text-red-500 transition-colors group" title="Keluar">
+              <LogOut className="w-5 h-5 transition-colors" />
             </button>
             <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 text-white flex items-center justify-center font-bold text-sm shadow-lg shadow-blue-500/20 transform hover:scale-105 transition-transform cursor-pointer border-2 border-[hsl(var(--background))]">
               AD
@@ -567,6 +969,7 @@ export default function DashboardPage() {
             {activeTab === 'dashboard' && renderDashboard()}
             {activeTab === 'users' && renderUsers()}
             {activeTab === 'orders' && renderOrders()}
+            {activeTab === 'scm' && renderSCM()}
             {activeTab === 'reports' && renderReports()}
             {activeTab === 'settings' && renderSettings()}
           </div>

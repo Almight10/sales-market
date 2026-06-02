@@ -15,6 +15,27 @@ export async function getUsers() {
   }
 }
 
+export async function loginUser(email: string, passwordInput: string) {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      return { success: false, message: 'Akun tidak ditemukan' };
+    }
+
+    if (user.password !== passwordInput) {
+      return { success: false, message: 'Kata sandi salah' };
+    }
+
+    return { success: true, user: { id: user.id, name: user.name, email: user.email, role: user.role } };
+  } catch (error) {
+    console.error(error);
+    return { success: false, message: 'Terjadi kesalahan pada server' };
+  }
+}
+
 export async function createUser(name: string, email: string, role: string) {
   try {
     const user = await prisma.user.create({
@@ -61,5 +82,43 @@ export async function createOrder(totalAmount: number) {
   } catch (error) {
     console.error(error);
     return { success: false, message: 'Gagal menambah pesanan' };
+  }
+}
+
+// === 3. Server Actions untuk SCM ===
+export async function getSCMData() {
+  try {
+    const suppliers = await prisma.supplier.findMany();
+    const inventory = await prisma.inventory.findMany({ include: { supplier: true }});
+    return { suppliers, inventory };
+  } catch (error) {
+    console.error(error);
+    return { suppliers: [], inventory: [] };
+  }
+}
+
+export async function createSupplier(name: string, contact: string) {
+  try {
+    const supplier = await prisma.supplier.create({
+      data: { name, contact }
+    });
+    revalidatePath('/');
+    return { success: true, supplier };
+  } catch(error) {
+    console.error(error);
+    return { success: false, message: 'Gagal menambah pemasok' };
+  }
+}
+
+export async function createInventory(itemName: string, stock: number, supplierId: string) {
+  try {
+    const inventory = await prisma.inventory.create({
+      data: { itemName, stock, supplierId }
+    });
+    revalidatePath('/');
+    return { success: true, inventory };
+  } catch(error) {
+    console.error(error);
+    return { success: false, message: 'Gagal menambah barang inventaris' };
   }
 }
