@@ -1,0 +1,87 @@
+services:
+  db:
+    platform: linux/amd64
+    image: postgres:15-alpine
+    container_name: dashboard_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: probolinggo
+      POSTGRES_DB: dashboard_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  minio:
+    platform: linux/amd64
+    image: minio/minio:latest
+    container_name: dashboard_minio
+    restart: always
+    ports:
+      - "9000:9000"
+      - "9090:9090"
+    command: server /data --console-address ":9090"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: admin123
+    volumes:
+      - minio_data:/data
+
+  crm-service:
+    platform: linux/amd64
+    build:
+      context: ./services/crm
+      dockerfile: Dockerfile
+    container_name: crm_service
+    restart: always
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+
+  hr-service:
+    platform: linux/amd64
+    build:
+      context: ./services/hr
+      dockerfile: Dockerfile
+    container_name: hr_service
+    restart: always
+    ports:
+      - "3002:3002"
+    environment:
+      - PORT=3002
+
+  dashboard:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dashboard_app
+    restart: on-failure
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+      - minio
+      - crm-service
+      - hr-service
+    environment:
+      # If DATABASE_URL is defined in .env, Docker Compose will use that (e.g., Neon DB).
+      # If not defined or empty, it will default to the local container 'db'.
+      - DATABASE_URL=${DATABASE_URL:-postgresql://postgres:probolinggo@db:5432/dashboard_db?schema=public}
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT:-minio}
+      - MINIO_PORT=${MINIO_PORT:-9000}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:-admin}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY:-admin123}
+      - MINIO_BUCKET=${MINIO_BUCKET:-erp-storage}
+      - CRM_SERVICE_URL=${CRM_SERVICE_URL:-http://crm-service:3001}
+      - HR_SERVICE_URL=${HR_SERVICE_URL:-http://hr-service:3002}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3000}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-f6d6c41b8a5d3f11a842b083c2e17ef4ba18f192b45a90d8a9e4e6293f0b2f0a}
+
+volumes:
+  postgres_data:
+  minio_data:

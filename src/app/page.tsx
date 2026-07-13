@@ -25,6 +25,7 @@ export default function DashboardPage() {
   
   // Auth State
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  const [showLoginForm, setShowLoginForm] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
@@ -497,9 +498,172 @@ export default function DashboardPage() {
     setIsLoggedIn(false);
   };
 
+  // FEATURE: Homepage / Landing Page
+  const renderHomepage = () => (
+    <div className="min-h-screen w-full bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-950 overflow-x-hidden font-sans">
+      {/* Animated Background Orbs */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[-10%] left-[-5%] w-[600px] h-[600px] bg-blue-600/20 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-5%] w-[700px] h-[700px] bg-indigo-600/20 rounded-full blur-[150px] animate-pulse" style={{ animationDelay: '3s' }} />
+        <div className="absolute top-[40%] left-[50%] w-[400px] h-[400px] bg-cyan-500/10 rounded-full blur-[100px]" />
+        {/* Grid Pattern */}
+        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '50px 50px' }} />
+      </div>
+
+      {/* Navbar */}
+      <nav className="relative z-10 flex items-center justify-between px-8 md:px-16 py-6 border-b border-white/5">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/30">
+            <Activity className="w-6 h-6 text-white" />
+          </div>
+          <span className="font-black text-2xl tracking-tighter text-white">NEXUS<span className="text-blue-400">.</span></span>
+        </div>
+        <div className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-400">
+          <a href="#features" className="hover:text-white transition-colors">Fitur</a>
+          <a href="#stats" className="hover:text-white transition-colors">Statistik</a>
+          <a href="#about" className="hover:text-white transition-colors">Tentang</a>
+        </div>
+        <button
+          id="nav-login-btn"
+          onClick={() => setShowLoginForm(true)}
+          className="px-5 py-2.5 rounded-xl border border-white/20 text-white text-sm font-bold hover:bg-white/10 transition-all hover:border-white/40"
+        >
+          Masuk
+        </button>
+      </nav>
+
+      {/* Hero Section */}
+      <section className="relative z-10 flex flex-col items-center text-center px-6 pt-24 pb-32">
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs font-bold uppercase tracking-widest mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
+          Platform ERP Terpadu & Real-time
+        </div>
+        <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white leading-[1.05] tracking-tight mb-6 animate-in fade-in slide-in-from-bottom-5 duration-700 delay-100" style={{ textShadow: '0 0 80px rgba(99,102,241,0.3)' }}>
+          Kelola Bisnis Anda<br />
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-400 to-indigo-400">Dengan Cerdas.</span>
+        </h1>
+        <p className="text-lg md:text-xl text-slate-400 max-w-2xl leading-relaxed mb-12 animate-in fade-in slide-in-from-bottom-5 duration-700 delay-200">
+          Nexus ERP menyatukan manajemen pengguna, transaksi, rantai pasok, dan laporan bisnis Anda dalam satu platform yang powerful dan mudah digunakan.
+        </p>
+        <div className="flex flex-col sm:flex-row items-center gap-4 animate-in fade-in slide-in-from-bottom-5 duration-700 delay-300">
+          <button
+            id="hero-cta-btn"
+            onClick={() => setShowLoginForm(true)}
+            className="group px-8 py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-lg hover:from-blue-500 hover:to-indigo-500 transition-all transform hover:scale-[1.03] shadow-2xl shadow-blue-500/30 flex items-center gap-3"
+          >
+            Masuk ke Sistem <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+          </button>
+          <a href="#features" className="px-8 py-4 rounded-2xl border border-white/10 text-slate-300 font-semibold text-lg hover:bg-white/5 hover:border-white/20 transition-all">
+            Lihat Fitur
+          </a>
+        </div>
+
+        {/* Dashboard Preview Card */}
+        <div className="mt-20 w-full max-w-4xl animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-500">
+          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-1 shadow-2xl shadow-black/50">
+            <div className="rounded-xl bg-gradient-to-b from-slate-800/80 to-slate-900/80 p-6">
+              {/* Fake Dashboard Header */}
+              <div className="flex items-center gap-2 mb-6">
+                <div className="w-3 h-3 rounded-full bg-red-500" />
+                <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                <div className="w-3 h-3 rounded-full bg-green-500" />
+                <div className="flex-1 ml-4 h-6 bg-white/5 rounded-lg" />
+              </div>
+              {/* Fake Stats Row */}
+              <div className="grid grid-cols-4 gap-4 mb-6">
+                {[
+                  { label: 'Total Pengguna', value: '2,847', color: 'from-blue-500/20 to-blue-600/20', border: 'border-blue-500/20' },
+                  { label: 'Total Pesanan', value: '12,590', color: 'from-indigo-500/20 to-indigo-600/20', border: 'border-indigo-500/20' },
+                  { label: 'Pendapatan', value: 'Rp 4.2M', color: 'from-cyan-500/20 to-cyan-600/20', border: 'border-cyan-500/20' },
+                  { label: 'Sistem Aktif', value: '100%', color: 'from-emerald-500/20 to-emerald-600/20', border: 'border-emerald-500/20' },
+                ].map((s, i) => (
+                  <div key={i} className={`rounded-xl p-4 bg-gradient-to-b ${s.color} border ${s.border}`}>
+                    <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-1">{s.label}</p>
+                    <p className="text-xl font-black text-white">{s.value}</p>
+                  </div>
+                ))}
+              </div>
+              {/* Fake Bar Chart */}
+              <div className="flex items-end gap-2 h-24">
+                {[45, 72, 55, 88, 60, 78, 92, 65, 85, 70, 95, 80].map((h, i) => (
+                  <div key={i} className="flex-1 rounded-t-md bg-gradient-to-t from-blue-600/40 to-indigo-500/60" style={{ height: `${h}%` }} />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section id="stats" className="relative z-10 px-8 md:px-16 py-20 border-y border-white/5">
+        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+          {[
+            { value: '99.9%', label: 'Uptime Server', suffix: '' },
+            { value: '50+', label: 'Fitur Terintegrasi', suffix: '' },
+            { value: '3ms', label: 'Rata-rata Latensi DB', suffix: '' },
+            { value: '100%', label: 'Open Source', suffix: '' },
+          ].map((s, i) => (
+            <div key={i} className="group">
+              <p className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400 mb-2">{s.value}</p>
+              <p className="text-slate-400 text-sm font-semibold">{s.label}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section id="features" className="relative z-10 px-8 md:px-16 py-24">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <p className="text-blue-400 text-sm font-bold uppercase tracking-widest mb-4">Semua yang Anda Butuhkan</p>
+            <h2 className="text-4xl md:text-5xl font-black text-white">Fitur Unggulan Platform</h2>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              { icon: BarChart3, title: 'Dasbor Analitik', desc: 'Pantau performa bisnis secara real-time dengan visualisasi data yang kaya dan interaktif.', color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20' },
+              { icon: Users, title: 'Manajemen Pengguna', desc: 'Kelola akses dan peran tim Anda dengan sistem RBAC (Role-Based Access Control) yang canggih.', color: 'text-indigo-400', bg: 'bg-indigo-500/10 border-indigo-500/20' },
+              { icon: ShoppingCart, title: 'Pesanan & Transaksi', desc: 'Lacak seluruh siklus pesanan dari pembuatan hingga penyelesaian dalam satu tampilan terpadu.', color: 'text-cyan-400', bg: 'bg-cyan-500/10 border-cyan-500/20' },
+              { icon: Truck, title: 'Rantai Pasok (SCM)', desc: 'Optimalkan hubungan dengan pemasok dan kelola inventaris gudang Anda secara efisien.', color: 'text-violet-400', bg: 'bg-violet-500/10 border-violet-500/20' },
+              { icon: FileText, title: 'Laporan & Analisis', desc: 'Hasilkan laporan mendalam yang membantu pengambilan keputusan bisnis yang lebih baik.', color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
+              { icon: Settings, title: 'Konfigurasi Sistem', desc: 'Sesuaikan setiap aspek platform dengan kebutuhan unik bisnis dan perusahaan Anda.', color: 'text-orange-400', bg: 'bg-orange-500/10 border-orange-500/20' },
+            ].map((f, i) => (
+              <div key={i} className={`group p-6 rounded-2xl border bg-white/3 backdrop-blur-sm hover:bg-white/8 transition-all duration-300 hover:-translate-y-1 ${f.bg}`}>
+                <div className={`inline-flex p-3 rounded-xl ${f.bg} mb-5`}>
+                  <f.icon className={`w-6 h-6 ${f.color}`} />
+                </div>
+                <h3 className="text-white font-bold text-lg mb-2">{f.title}</h3>
+                <p className="text-slate-400 text-sm leading-relaxed">{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Footer Section */}
+      <section id="about" className="relative z-10 px-8 md:px-16 py-24 text-center">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-4xl md:text-5xl font-black text-white mb-6">Siap Memulai?</h2>
+          <p className="text-slate-400 text-lg mb-10">Masuk ke sistem Nexus ERP sekarang dan rasakan perbedaannya.</p>
+          <button
+            id="footer-cta-btn"
+            onClick={() => setShowLoginForm(true)}
+            className="group px-10 py-5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-xl hover:from-blue-500 hover:to-indigo-500 transition-all transform hover:scale-[1.03] shadow-2xl shadow-blue-500/30 flex items-center gap-3 mx-auto"
+          >
+            Masuk ke Sistem <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+          </button>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="relative z-10 border-t border-white/5 px-8 py-6 text-center text-slate-600 text-sm">
+        © 2026 Nexus ERP · PT Cipta Inovasi Nusantara · All rights reserved.
+      </footer>
+    </div>
+  );
+
   // FEATURE: Login Screen
   const renderLogin = () => (
-    <div className="min-h-screen w-full flex items-center justify-center bg-[#f8fafc] p-4 relative overflow-hidden font-sans">
+    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-950 p-4 relative overflow-hidden font-sans">
       {/* Dynamic Background */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] bg-blue-500/20 rounded-full blur-[120px] animate-pulse"></div>
@@ -512,17 +676,21 @@ export default function DashboardPage() {
           <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 mb-6 shadow-2xl shadow-blue-500/30">
             <Activity className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-4xl font-black tracking-tight text-[hsl(var(--foreground))] mb-3">Selamat Datang</h1>
-          <p className="text-[hsl(var(--muted-foreground))] text-lg">Masuk ke sistem ERP Nexus</p>
+          <h1 className="text-4xl font-black tracking-tight text-white mb-3">Selamat Datang</h1>
+          <p className="text-slate-400 text-lg">Masuk ke sistem ERP Nexus</p>
         </div>
 
-        <div className="glass rounded-3xl p-8 shadow-2xl border border-[hsl(var(--border))] animate-in fade-in zoom-in-95 duration-500 delay-150 fill-mode-both relative overflow-hidden">
+        {/* Back to homepage */}
+        <button onClick={() => setShowLoginForm(false)} className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-sm font-semibold mb-6 group">
+          <ArrowRight className="w-4 h-4 rotate-180 group-hover:-translate-x-1 transition-transform" /> Kembali ke Beranda
+        </button>
+        <div className="bg-white/5 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/10 animate-in fade-in zoom-in-95 duration-500 delay-150 fill-mode-both relative overflow-hidden">
           {/* Shimmer effect line */}
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-50"></div>
           
           <form onSubmit={handleLoginSubmit} className="space-y-6">
             <div className="space-y-2">
-              <label className="text-sm font-bold text-[hsl(var(--foreground))] ml-1">Alamat Email</label>
+              <label className="text-sm font-bold text-white ml-1">Alamat Email</label>
               <div className="relative group">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[hsl(var(--muted-foreground))] group-focus-within:text-[hsl(var(--primary))] transition-colors" />
                 <input 
@@ -531,13 +699,13 @@ export default function DashboardPage() {
                   value={loginEmail}
                   onChange={(e) => setLoginEmail(e.target.value)}
                   placeholder="admin@ciptainovasi.id"
-                  className="w-full pl-12 pr-4 py-4 bg-[hsl(var(--background))]/50 border border-[hsl(var(--border))] rounded-2xl focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))]/50 transition-all font-medium"
+                  className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 text-white placeholder:text-slate-500 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all font-medium"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-bold text-[hsl(var(--foreground))] ml-1">Kata Sandi</label>
+              <label className="text-sm font-bold text-white ml-1">Kata Sandi</label>
               <div className="relative group">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[hsl(var(--muted-foreground))] group-focus-within:text-[hsl(var(--primary))] transition-colors" />
                 <input 
@@ -546,7 +714,7 @@ export default function DashboardPage() {
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-12 pr-12 py-4 bg-[hsl(var(--background))]/50 border border-[hsl(var(--border))] rounded-2xl focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))]/50 transition-all font-medium"
+                  className="w-full pl-12 pr-12 py-4 bg-white/5 border border-white/10 text-white placeholder:text-slate-500 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all font-medium"
                 />
                 <button 
                   type="button"
@@ -561,15 +729,15 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between mt-2 mb-6">
               <label className="flex items-center gap-2 cursor-pointer group">
                 <input type="checkbox" className="w-4 h-4 rounded border-[hsl(var(--border))] text-[hsl(var(--primary))] focus:ring-[hsl(var(--primary))]/50 bg-transparent transition-colors cursor-pointer" />
-                <span className="text-sm text-[hsl(var(--muted-foreground))] group-hover:text-[hsl(var(--foreground))] transition-colors">Ingat saya</span>
+                <span className="text-sm text-slate-400 group-hover:text-white transition-colors">Ingat saya</span>
               </label>
-              <a href="#" className="text-sm font-bold text-[hsl(var(--primary))] hover:underline">Lupa Sandi?</a>
+              <a href="#" className="text-sm font-bold text-blue-400 hover:underline">Lupa Sandi?</a>
             </div>
 
             <button 
               type="submit" 
               disabled={loginLoading}
-              className="w-full bg-[hsl(var(--foreground))] text-[hsl(var(--background))] py-4 rounded-2xl font-bold text-lg hover:bg-[hsl(var(--primary))] hover:text-white transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-xl flex items-center justify-center gap-2 disabled:opacity-70 disabled:pointer-events-none group"
+              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-2xl font-bold text-lg hover:from-blue-500 hover:to-indigo-500 transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-xl shadow-blue-500/30 flex items-center justify-center gap-2 disabled:opacity-70 disabled:pointer-events-none group"
             >
               {loginLoading ? (
                 <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -582,15 +750,15 @@ export default function DashboardPage() {
           </form>
 
           <div className="relative my-6 flex py-2 items-center">
-            <div className="flex-grow border-t border-[hsl(var(--border))]"></div>
-            <span className="flex-shrink mx-4 text-xs font-semibold text-[hsl(var(--muted-foreground))] uppercase tracking-wider">atau</span>
-            <div className="flex-grow border-t border-[hsl(var(--border))]"></div>
+            <div className="flex-grow border-t border-white/10"></div>
+            <span className="flex-shrink mx-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">atau</span>
+            <div className="flex-grow border-t border-white/10"></div>
           </div>
 
           <button
             type="button"
             onClick={() => window.location.href = '/api/auth/google'}
-            className="w-full bg-white dark:bg-zinc-900 border border-[hsl(var(--border))] text-[hsl(var(--foreground))] py-4 rounded-2xl font-bold text-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-sm flex items-center justify-center gap-3 cursor-pointer"
+            className="w-full bg-white/10 border border-white/10 text-white py-4 rounded-2xl font-bold text-lg hover:bg-white/15 transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-sm flex items-center justify-center gap-3 cursor-pointer"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path
@@ -613,9 +781,9 @@ export default function DashboardPage() {
             Masuk dengan Google
           </button>
           
-          <div className="mt-8 text-center border-t border-[hsl(var(--border))]/50 pt-6">
-            <p className="text-sm text-[hsl(var(--muted-foreground))]">
-              Belum memiliki akses? <a href="#" className="font-bold text-[hsl(var(--foreground))] hover:text-[hsl(var(--primary))] transition-colors">Hubungi Administrator</a>
+          <div className="mt-8 text-center border-t border-white/10 pt-6">
+            <p className="text-sm text-slate-500">
+              Belum memiliki akses? <a href="#" className="font-bold text-slate-300 hover:text-white transition-colors">Hubungi Administrator</a>
             </p>
           </div>
         </div>
@@ -625,14 +793,15 @@ export default function DashboardPage() {
 
   if (isLoggedIn === null) {
     return (
-      <div className="h-screen w-full flex items-center justify-center bg-[#f8fafc]">
-        <div className="w-10 h-10 border-4 border-[hsl(var(--primary))]/30 border-t-[hsl(var(--primary))] rounded-full animate-spin"></div>
+      <div className="h-screen w-full flex items-center justify-center bg-slate-950">
+        <div className="w-10 h-10 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
       </div>
     );
   }
 
   if (isLoggedIn === false) {
-    return renderLogin();
+    if (showLoginForm) return renderLogin();
+    return renderHomepage();
   }
 
   return (
